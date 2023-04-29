@@ -47,9 +47,10 @@ router.post("/posts", isAuthenticated, async (req, res) => {
 });
 
 router.get("/posts", isAuthenticated, async (req, res) => {
-  const userId = Number(req.user._id); // Convert ObjectId to Number
+  const userId = req.user._id;
 
   try {
+    
     const friends = await Friend.find({
       $or: [{ user1: userId }, { user2: userId }],
     });
@@ -57,14 +58,15 @@ router.get("/posts", isAuthenticated, async (req, res) => {
     const friendIds = friends.map(
       (f) =>
         f.user1.toString() === userId.toString()
-          ? Number(f.user2)
-          : Number(f.user1) // Convert ObjectIds to Numbers
+          ? f.user2
+          : f.user1 
     );
 
     const posts = await Post.find({ userId: { $in: friendIds } }).sort({
       createdAt: -1,
-    }); // Fetch user data for each post
+    }); 
 
+    // Fetch user data for each post
     const userPromises = posts.map(async (post) => {
       const user = await User.findOne(
         { _id: post.userId },
@@ -83,6 +85,8 @@ router.get("/posts", isAuthenticated, async (req, res) => {
     res.status(500).send({ success: false, message: "Error fetching posts" });
   }
 });
+
+
 
 // router.get("/posts", async (req, res) => {
 //   try {

@@ -1,5 +1,4 @@
-import React, { useState } from "react";
-import {
+import React, { useState } from "react";import {
   View,
   Text,
   TextInput,

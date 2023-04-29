@@ -1,7 +1,7 @@
 import axios from "axios";
 
 const api = axios.create({
-  baseURL: "https://2bfc-193-1-57-1.ngrok-free.app",
+  baseURL: "https://f502-193-1-57-1.ngrok-free.app",
 });
 
 export const createPost = async ({ userId, image, caption }) => {

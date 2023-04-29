@@ -1,14 +1,19 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { View, Text, Image, FlatList, StyleSheet } from 'react-native';
+import { useFocusEffect } from '@react-navigation/native';
 import { Card } from 'react-native-elements';
 import { getPosts } from '../middleware/api';
 
 const HomeScreen = () => {
   const [posts, setPosts] = useState([]);
 
-  useEffect(() => {
-    fetchPosts();
-  }, []);
+
+  useFocusEffect(
+    useCallback(() => {
+      fetchPosts();
+    }, [])
+  );
+
 
   const fetchPosts = async () => {
     try {
