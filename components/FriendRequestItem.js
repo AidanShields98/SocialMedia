@@ -1,9 +1,17 @@
 import React from "react";
-import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
+import { View, Text, TouchableOpacity, Image, StyleSheet } from "react-native";
 
 const FriendRequestItem = ({ request, handleAccept, handleDecline }) => {
   return (
     <View style={styles.requestItem}>
+      <Image
+        source={{
+          uri: request.requester.profilePicture
+            ? `data:image/jpeg;base64,${request.requester.profilePicture}`
+            : "https://via.placeholder.com/150",
+        }}
+        style={styles.avatar}
+      />
       <Text style={styles.requesterName}>
         {request.requester.firstName} {request.requester.lastName}
       </Text>
@@ -37,8 +45,15 @@ const styles = StyleSheet.create({
     borderColor: "#ddd",
     borderRadius: 5,
   },
+  avatar: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    marginRight: 10,
+  },
   requesterName: {
     fontSize: 16,
+    flex: 1,
   },
   buttonsContainer: {
     flexDirection: "row",

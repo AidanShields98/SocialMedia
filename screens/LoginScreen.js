@@ -25,9 +25,9 @@ function LoginScreen({ navigation, onLoginSuccess }) {
       const response = await signIn(email, password);
       if (response.success) {
         navigation.navigate("Home");
-        onLoginSuccess(response.data.userId);
+        onLoginSuccess(response.userId);
       } else {
-        console.error(response.message);
+        console.error(response.error);
       }
     } catch (error) {
       console.error("Error during login:", error);

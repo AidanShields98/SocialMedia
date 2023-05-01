@@ -1,7 +1,7 @@
 import axios from "axios";
 
 const api = axios.create({
-  baseURL: "https://f502-193-1-57-1.ngrok-free.app",
+  baseURL: "https://81b9-109-78-9-223.eu.ngrok.io",
 });
 
 export const createPost = async ({ userId, image, caption }) => {
@@ -77,6 +77,8 @@ export const signUp = async (
     lastName,
     profilePicture,
   });
+  console.log("signIn request data:", { email, password });
+  console.log("signIn response data:", response.data);
   return response.data;
 };
 
