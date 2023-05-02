@@ -42,7 +42,7 @@ const FriendRequests = () => {
 
   return (
     <View style={styles.friendRequestsContainer}>
-      <Text>Friend Requests:</Text>
+      <Text style={styles.friendText}>Friend Requests:</Text>
       <FlatList
         data={friendRequests}
         renderItem={({ item }) => (
@@ -63,6 +63,11 @@ const styles = StyleSheet.create({
     height: "40%",
     paddingHorizontal: 15,
   },
+  friendText:{
+    fontSize: 20,
+    fontWeight: "bold",
+    textAlign: "center",
+  }
 });
 
 export default FriendRequests;

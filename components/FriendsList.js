@@ -25,6 +25,7 @@ const FriendsList = () => {
 
   return (
     <View style={styles.container}>
+       <Text style={styles.friendText}>Friends List</Text>
       <FlatList
         data={friends}
         renderItem={renderItem}
@@ -38,6 +39,11 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
+  friendText:{
+    fontSize: 20,
+    fontWeight: "bold",
+    textAlign: "center",
+  }
 });
 
 export default FriendsList;

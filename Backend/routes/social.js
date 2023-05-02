@@ -9,6 +9,7 @@ const { Post } = require("../models/post");
 const { FriendRequest } = require("../models/friendRequest");
 const { Friend } = require("../models/friend");
 
+
 router.post("/createpost", isAuthenticated, async (req, res) => {
   const { image, caption } = req.body;
   const userId = req.user._id;
@@ -21,6 +22,20 @@ router.post("/createpost", isAuthenticated, async (req, res) => {
   try {
     const post = new Post({ userId: userId, image, caption });
     await post.save();
+
+    // Fetch user's friends
+    const user = await User.findById(userId).populate("friends");
+
+    // Send a push notification to each friend with an expoPushToken
+    for (const friend of user.friends) {
+      if (friend.expoPushToken) {
+        await sendPushNotification(
+          friend.expoPushToken,
+          `${req.user.firstName} ${req.user.lastName} has made a new post!`
+        );
+      }
+    }
+
     res.send({ success: true, message: "Post created", post });
   } catch (error) {
     console.log("Error saving post:", error);
@@ -257,10 +272,10 @@ router.post("/signup", async (req, res, next) => {
   const firstName = req.body.firstName;
   const lastName = req.body.lastName;
   const profilePicture = req.body.profilePicture;
-  const hashedPass = await bcrypt.hash(password, 12);
+ // const hashedPass = await bcrypt.hash(password, 12);
   const newUser = new User({
     userEmail,
-    password: hashedPass,
+    password,//: hashedPass,
     userId,
     expoPushToken,
     firstName,
@@ -299,7 +314,7 @@ router.post("/signout", (req, res) => {
 router.get("/user", isAuthenticated, async (req, res) => {
   const userId = req.user.id;
   try {
-    const user = await User.findById(userId).select("userName profilePicture");
+    const user = await User.findById(userId).select("firstName lastName userEmail profilePicture");
     res.send({ success: true, user });
   } catch (error) {
     console.error("Error fetching user:", error);
@@ -307,24 +322,31 @@ router.get("/user", isAuthenticated, async (req, res) => {
   }
 });
 
+
 // Update user password
 router.put("/user/password", isAuthenticated, async (req, res) => {
   try {
     const { currentPassword, newPassword } = req.body;
 
-    // Retrieve the user from the database using the current password
-    const user = await User.findOne({
-      _id: req.user._id,
-      password: currentPassword,
-    });
+    // Retrieve the user from the database using the user's _id from isAuthenticated middleware
+    const user = await User.findOne({ _id: req.user._id });
 
     // If user is not found, return an error
     if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    // Check if the current password is valid
+    const isPasswordValid = await bcrypt.compare(currentPassword, user.password);
+
+    // If the current password is invalid, return an error
+    if (!isPasswordValid) {
       return res.status(401).json({ message: "Invalid current password" });
     }
 
-    // Update the user's password
-    user.password = newPassword;
+    // Hash the new password and update the user's password
+    const newHashedPassword = await bcrypt.hash(newPassword, 12);
+    user.password = newHashedPassword;
     await user.save();
 
     res.json({ message: "Password updated successfully" });
@@ -333,6 +355,7 @@ router.put("/user/password", isAuthenticated, async (req, res) => {
     res.status(500).json({ message: "Internal server error" });
   }
 });
+
 
 // Add other routes here
 module.exports = {
