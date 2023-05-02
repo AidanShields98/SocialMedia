@@ -19,7 +19,7 @@ const FriendRequests = () => {
       const requests = await getFriendRequests();
       setFriendRequests(requests);
     } catch (error) {
-      console.error("Error fetching friend requests:", error);
+      console.log("Error fetching friend requests");
     }
   };
 

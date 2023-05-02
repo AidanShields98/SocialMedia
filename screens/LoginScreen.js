@@ -5,6 +5,7 @@ import {
   TextInput,
   TouchableOpacity,
   StyleSheet,
+  Alert,
 } from "react-native";
 import { signIn } from "../middleware/api";
 
@@ -27,10 +28,11 @@ function LoginScreen({ navigation, onLoginSuccess }) {
         navigation.navigate("Home");
         onLoginSuccess(response.userId);
       } else {
-        console.error(response.error);
+        console.log(response.message);
+        Alert.alert("Error", "Incorrect password or email.");
       }
     } catch (error) {
-      console.error("Error during login:", error);
+      console.log("Error during login:");
     }
   };
 

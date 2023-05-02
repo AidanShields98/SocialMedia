@@ -28,18 +28,6 @@ const ProfileScreen = ({ navigation, handleSignoutSuccess }) => {
   }, []);
 
   const handleChangePassword = async () => {
-    if (currentPassword === "") {
-      Alert.alert("Error", "Please enter your current password.");
-      return;
-    }
-    if (newPassword === "") {
-      Alert.alert("Error", "Please enter a new password.");
-      return;
-    }
-    if (newPassword !== confirmNewPassword) {
-      Alert.alert("Error", "New passwords do not match.");
-      return;
-    }
     try {
       await updatePassword(user._id, { currentPassword, newPassword });
       Alert.alert("Success", "Password changed successfully.");
