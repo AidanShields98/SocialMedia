@@ -9,14 +9,13 @@ import {
   TextInput,
   Alert,
 } from "react-native";
-import { getUser, updatePassword, signOut } from '../middleware/api';
+import { getUser, updatePassword, signOut } from "../middleware/api";
 
-const ProfileScreen = ({ navigation, handleSignoutSuccess  }) => {
+const ProfileScreen = ({ navigation, handleSignoutSuccess }) => {
   const [modalVisible, setModalVisible] = useState(false);
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmNewPassword, setConfirmNewPassword] = useState("");
-
   const [user, setUser] = useState(null);
 
   useEffect(() => {
@@ -29,39 +28,40 @@ const ProfileScreen = ({ navigation, handleSignoutSuccess  }) => {
   }, []);
 
   const handleChangePassword = async () => {
-    if (currentPassword === '') {
-      Alert.alert('Error', 'Please enter your current password.');
+    if (currentPassword === "") {
+      Alert.alert("Error", "Please enter your current password.");
       return;
     }
-    if (newPassword === '') {
-      Alert.alert('Error', 'Please enter a new password.');
+    if (newPassword === "") {
+      Alert.alert("Error", "Please enter a new password.");
       return;
     }
     if (newPassword !== confirmNewPassword) {
-      Alert.alert('Error', 'New passwords do not match.');
+      Alert.alert("Error", "New passwords do not match.");
       return;
     }
     try {
-      await updatePassword(req.user._id, currentPassword, newPassword);
-      Alert.alert('Success', 'Password changed successfully.');
+      await updatePassword(user._id, { currentPassword, newPassword });
+      Alert.alert("Success", "Password changed successfully.");
       setModalVisible(false);
     } catch (error) {
-      Alert.alert('Error', 'Failed to change password. Please try again later.');
+      Alert.alert(
+        "Error",
+        "Failed to change password. Please try again later."
+      );
     }
   };
-  
-  
+
   const handleSignOut = async () => {
     try {
       await signOut();
       handleSignoutSuccess();
       navigation.navigate("Login");
     } catch (error) {
-      console.error('Error signing out:', error);
-      Alert.alert('Error', 'Failed to sign out. Please try again later.');
+      console.error("Error signing out:", error);
+      Alert.alert("Error", "Failed to sign out. Please try again later.");
     }
   };
-
 
   const handleProfilePicture = async () => {
     // Add your logic for changing the profile picture here.
@@ -72,17 +72,20 @@ const ProfileScreen = ({ navigation, handleSignoutSuccess  }) => {
   return (
     <View style={styles.profileScreen}>
       <View style={styles.avatarContainer}>
-      <Image
+        <Image
           source={{
             uri: user?.profilePicture
               ? `data:image/jpeg;base64,${user.profilePicture}`
-              : 'https://via.placeholder.com/150',
+              : "https://via.placeholder.com/150",
           }}
           style={styles.avatar}
         />
       </View>
-      <View style={styles.userInfo}>
-        <Text style={styles.userName}>{user?.userName}</Text>
+      <View style={styles.userInfoContainer}>
+        <Text style={styles.userInfoText}>
+          {user?.firstName} {user?.lastName}
+        </Text>
+        <Text style={styles.userInfoText}>{user?.userEmail}</Text>
       </View>
       <View style={styles.buttonsContainer}>
         <TouchableOpacity
@@ -148,29 +151,35 @@ const ProfileScreen = ({ navigation, handleSignoutSuccess  }) => {
 const styles = StyleSheet.create({
   profileScreen: {
     flex: 1,
-    justifyContent: "center",
+    backgroundColor: "#fff",
     alignItems: "center",
   },
   avatarContainer: {
-    marginTop: 20,
+    marginTop: 40,
+    borderWidth: 2,
+    borderRadius: 100,
+    borderColor: "#1e90ff",
+    padding: 10,
   },
-  avatar: {
-    width: 150,
-    height: 150,
-    borderRadius: 75,
+  avatar: { 
+    width: 180, 
+    height: 180, 
+    borderRadius: 90
   },
-  userInfo: {
-    marginBottom: 10,
+  userInfoContainer: {
+    marginVertical: 20,
+    alignItems: "center",
   },
-  userName: {
+  userInfoText: {
     fontSize: 18,
     fontWeight: "bold",
+    marginVertical: 5,
   },
   buttonsContainer: {
-    flexDirection: "column",
+    marginTop: 20,
   },
   button: {
-    backgroundColor: "#EFEFEF",
+    backgroundColor: "#1e90ff",
     paddingVertical: 10,
     paddingHorizontal: 20,
     borderRadius: 5,

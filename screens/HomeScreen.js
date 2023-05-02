@@ -1,14 +1,17 @@
-import React, { useEffect, useState } from 'react';
-import { View, Text, Image, FlatList, StyleSheet } from 'react-native';
+import React, { useEffect, useState, useCallback } from 'react';
+import { View, Text, Image, StyleSheet, ScrollView } from 'react-native';
+import { useFocusEffect } from '@react-navigation/native';
 import { Card } from 'react-native-elements';
 import { getPosts } from '../middleware/api';
 
 const HomeScreen = () => {
   const [posts, setPosts] = useState([]);
 
-  useEffect(() => {
-    fetchPosts();
-  }, []);
+  useFocusEffect(
+    useCallback(() => {
+      fetchPosts();
+    }, [])
+  );
 
   const fetchPosts = async () => {
     try {
@@ -19,11 +22,11 @@ const HomeScreen = () => {
     }
   };
 
-  const renderItem = ({ item }) => {
+  const renderPost = (item) => {
     const imageUri = `data:image/jpeg;base64,${item.image}`;
 
     return (
-      <Card containerStyle={styles.card}>
+      <Card containerStyle={styles.card} key={item._id}>
         <Image source={{ uri: imageUri }} style={styles.postImage} />
         <View style={styles.captionContainer}>
           <Text style={styles.caption}>{item.caption}</Text>
@@ -36,20 +39,15 @@ const HomeScreen = () => {
   };
 
   return (
-    <View style={styles.container}>
-      <FlatList
-        data={posts}
-        renderItem={renderItem}
-        keyExtractor={(item) => item._id.toString()}
-        contentContainerStyle={styles.flatListContent}
-      />
-    </View>
+    <ScrollView contentContainerStyle={styles.scrollViewContent}>
+      {posts.map((post) => renderPost(post))}
+    </ScrollView>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
+  scrollViewContent: {
+    flexGrow: 1,
     justifyContent: 'center',
     alignItems: 'center',
     backgroundColor: '#F5FCFF',
@@ -57,11 +55,13 @@ const styles = StyleSheet.create({
   card: {
     width: '80%',
     height: 410,
+    alignItems: 'center',
     margin: 50,
   },
   postImage: {
-    width: 330,
+    width: 300,
     height: '90%',
+    alignItems: 'center',
     resizeMode: 'cover',
   },
   uploadTime: {

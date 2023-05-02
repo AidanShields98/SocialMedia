@@ -35,7 +35,9 @@ app.use("/", routes);
 
 mongoose.set("strictQuery", true);
 mongoose
-  .connect("mongodb://127.0.0.1:27123/Project")
+ // .connect("mongodb://127.0.0.1:27123/Project")
+ // .connect("mongodb://127.0.0.1/Project")
+  .connect("mongodb+srv://g00370587:jXofb9UppcacHwlx@social.yrx4z0q.mongodb.net/Project")
   .then((res) => {
     console.log("Connected to MongoDB");
     app.listen(3000);

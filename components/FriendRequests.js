@@ -1,14 +1,18 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { View, Text, FlatList, StyleSheet } from "react-native";
 import { getFriendRequests, updateFriendRequest } from "../middleware/api";
 import FriendRequestItem from "./FriendRequestItem";
+import { useFocusEffect } from '@react-navigation/native';
 
 const FriendRequests = () => {
   const [friendRequests, setFriendRequests] = useState([]);
 
-  useEffect(() => {
-    fetchFriendRequests();
-  }, []);
+  useFocusEffect(
+    useCallback(() => {
+      fetchFriendRequests();
+    }, [])
+  );
+
 
   const fetchFriendRequests = async () => {
     try {
@@ -38,7 +42,7 @@ const FriendRequests = () => {
 
   return (
     <View style={styles.friendRequestsContainer}>
-      <Text>Friend Requests:</Text>
+      <Text style={styles.friendText}>Friend Requests:</Text>
       <FlatList
         data={friendRequests}
         renderItem={({ item }) => (
@@ -59,6 +63,11 @@ const styles = StyleSheet.create({
     height: "40%",
     paddingHorizontal: 15,
   },
+  friendText:{
+    fontSize: 20,
+    fontWeight: "bold",
+    textAlign: "center",
+  }
 });
 
 export default FriendRequests;

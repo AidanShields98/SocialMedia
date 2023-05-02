@@ -33,14 +33,16 @@ const SearchModal = ({ modalVisible, setModalVisible }) => {
         setModalVisible(!modalVisible);
       }}
     >
-      <View style={styles.modalContainer}>
-        <TextInput
-          style={styles.searchInput}
-          onChangeText={setSearchTerm}
-          value={searchTerm}
-          placeholder="Search for friends..."
-          onSubmitEditing={() => searchUsersWrapper()}
-        />
+      <View style={styles.container}>
+        <View style={styles.searchContainer}>
+          <TextInput
+            style={styles.searchInput}
+            onChangeText={setSearchTerm}
+            value={searchTerm}
+            placeholder="Search for friends..."
+            onSubmitEditing={() => searchUsersWrapper()}
+          />
+        </View>
         <FlatList
           data={searchResults}
           renderItem={({ item }) => (
@@ -63,10 +65,14 @@ const SearchModal = ({ modalVisible, setModalVisible }) => {
 };
 
 const styles = StyleSheet.create({
-  modalContainer: {
+  container: {
     flex: 1,
     paddingHorizontal: 15,
-    paddingTop: 30,
+    paddingTop: 80, // adjust this value to move the entire component up or down
+  },
+  searchContainer: {
+    height: "25%",
+    justifyContent: "center",
   },
   searchInput: {
     height: 40,

@@ -3,31 +3,14 @@ const router = express.Router();
 const bcrypt = require("bcryptjs");
 const isAuthenticated = require("../middleware/Auth");
 const Expo = require("expo-server-sdk").Expo;
-
+const { sendPushNotification} = require("../middleware/notifications");
 const { User } = require("../models/User");
 const { Post } = require("../models/post");
 const { FriendRequest } = require("../models/friendRequest");
 const { Friend } = require("../models/friend");
 
+
 router.post("/createpost", isAuthenticated, async (req, res) => {
-  const { userId, image, caption } = req.body;
-
-  if (!image) {
-    res.status(400).send({ success: false, message: "Image is required" });
-    return;
-  }
-
-  try {
-    const post = new Post({ userId: userId, image, caption });
-    await post.save();
-    res.send({ success: true, message: "Post created", post });
-  } catch (error) {
-    console.log("Error saving post:", error);
-    res.status(500).send({ success: false, message: "Error creating post" });
-  }
-});
-
-router.post("/posts", isAuthenticated, async (req, res) => {
   const { image, caption } = req.body;
   const userId = req.user._id;
 
@@ -37,8 +20,22 @@ router.post("/posts", isAuthenticated, async (req, res) => {
   }
 
   try {
-    const post = new Post({ user: userId, image, caption });
+    const post = new Post({ userId: userId, image, caption });
     await post.save();
+
+    // Fetch user's friends
+    const user = await User.findById(userId).populate("friends");
+
+    // Send a push notification to each friend with an expoPushToken
+    for (const friend of user.friends) {
+      if (friend.expoPushToken) {
+        await sendPushNotification(
+          friend.expoPushToken,
+          `${req.user.firstName} ${req.user.lastName} has made a new post!`
+        );
+      }
+    }
+
     res.send({ success: true, message: "Post created", post });
   } catch (error) {
     console.log("Error saving post:", error);
@@ -46,25 +43,39 @@ router.post("/posts", isAuthenticated, async (req, res) => {
   }
 });
 
+// router.post("/posts", isAuthenticated, async (req, res) => {
+//   const { image, caption } = req.body;
+//   const userId = req.user._id;
+
+//   if (!image) {
+//     res.status(400).send({ success: false, message: "Image is required" });
+//     return;
+//   }
+
+//   try {
+//     const post = new Post({ user: userId, image, caption });
+//     await post.save();
+//     res.send({ success: true, message: "Post created", post });
+//   } catch (error) {
+//     console.log("Error saving post:", error);
+//     res.status(500).send({ success: false, message: "Error creating post" });
+//   }
+// });
+
 router.get("/posts", isAuthenticated, async (req, res) => {
-  const userId = Number(req.user._id); // Convert ObjectId to Number
+  const userId = req.user._id;
 
   try {
-    const friends = await Friend.find({
-      $or: [{ user1: userId }, { user2: userId }],
-    });
+    const user = await User.findById(userId);
 
-    const friendIds = friends.map(
-      (f) =>
-        f.user1.toString() === userId.toString()
-          ? Number(f.user2)
-          : Number(f.user1) // Convert ObjectIds to Numbers
-    );
+    // Add the current user's ID to the list of friendIds
+    const friendIds = [...user.friends, userId];
 
     const posts = await Post.find({ userId: { $in: friendIds } }).sort({
       createdAt: -1,
-    }); // Fetch user data for each post
+    });
 
+    // Fetch user data for each post
     const userPromises = posts.map(async (post) => {
       const user = await User.findOne(
         { _id: post.userId },
@@ -81,45 +92,6 @@ router.get("/posts", isAuthenticated, async (req, res) => {
   } catch (error) {
     console.log("Error fetching posts:", error);
     res.status(500).send({ success: false, message: "Error fetching posts" });
-  }
-});
-
-// router.get("/posts", async (req, res) => {
-//   try {
-//     const posts = await Post.find({}).sort({ createdAt: -1 });
-
-//     res.send({ success: true, posts: posts });
-//   } catch (error) {
-//     console.log("Error fetching posts:", error);
-//     res.status(500).send({ success: false, message: "Error fetching posts" });
-//   }
-// });
-
-// Route to send a friend request
-router.post("/friend_requests", isAuthenticated, async (req, res) => {
-  const userId = req.user._id;
-  const { recipientId } = req.body;
-
-  if (!recipientId) {
-    res
-      .status(400)
-      .send({ success: false, message: "Recipient ID is required" });
-    return;
-  }
-
-  try {
-    const friendRequest = new FriendRequest({
-      requester: userId,
-      recipient: recipientId,
-      status: "pending",
-    });
-    await friendRequest.save();
-    res.send({ success: true, message: "Friend request sent", friendRequest });
-  } catch (error) {
-    console.log("Error sending friend request:", error);
-    res
-      .status(500)
-      .send({ success: false, message: "Error sending friend request" });
   }
 });
 
@@ -145,6 +117,48 @@ router.get("/friend_requests", isAuthenticated, async (req, res) => {
     });
   }
 });
+
+// Route to send a friend request
+router.post("/friend_requests", isAuthenticated, async (req, res) => {
+  const userId = req.user._id;
+  const { recipientId } = req.body;
+
+  if (!recipientId) {
+    res
+      .status(400)
+      .send({ success: false, message: "Recipient ID is required" });
+    return;
+  }
+
+  try {
+    const friendRequest = new FriendRequest({
+      requester: userId,
+      recipient: recipientId,
+      status: "pending",
+    });
+    await friendRequest.save();
+
+    // Get the recipient user data
+    const recipient = await User.findById(recipientId);
+
+    // Send a push notification to the recipient
+    if (recipient.expoPushToken) {
+      await sendPushNotification(
+        recipient.expoPushToken,
+        `${req.user.firstName} ${req.user.lastName} added you as a friend`
+      );
+    }
+
+    res.send({ success: true, message: "Friend request sent", friendRequest });
+  } catch (error) {
+    console.log("Error sending friend request:", error);
+    res
+      .status(500)
+      .send({ success: false, message: "Error sending friend request" });
+  }
+});
+
+
 
 // Route to update a friend request
 router.put("/friend_requests/:id", isAuthenticated, async (req, res) => {
@@ -172,11 +186,13 @@ router.put("/friend_requests/:id", isAuthenticated, async (req, res) => {
     friendRequest.status = status;
     await friendRequest.save();
     if (status === "accepted") {
-      const friend = new Friend({
-        user1: friendRequest.requester,
-        user2: friendRequest.recipient,
+      // Add the accepted friend to both requester and recipient's friends list
+      await User.findByIdAndUpdate(friendRequest.requester, {
+        $push: { friends: friendRequest.recipient },
       });
-      await friend.save();
+      await User.findByIdAndUpdate(friendRequest.recipient, {
+        $push: { friends: friendRequest.requester },
+      });
     }
     res.send({
       success: true,
@@ -190,6 +206,7 @@ router.put("/friend_requests/:id", isAuthenticated, async (req, res) => {
       .send({ success: false, message: "Error updating friend request" });
   }
 });
+
 
 router.get("/search", isAuthenticated, async (req, res) => {
   const searchTerm = req.query.term;
@@ -255,10 +272,10 @@ router.post("/signup", async (req, res, next) => {
   const firstName = req.body.firstName;
   const lastName = req.body.lastName;
   const profilePicture = req.body.profilePicture;
-  const hashedPass = await bcrypt.hash(password, 12);
+ // const hashedPass = await bcrypt.hash(password, 12);
   const newUser = new User({
     userEmail,
-    password: hashedPass,
+    password,//: hashedPass,
     userId,
     expoPushToken,
     firstName,
@@ -297,7 +314,7 @@ router.post("/signout", (req, res) => {
 router.get("/user", isAuthenticated, async (req, res) => {
   const userId = req.user.id;
   try {
-    const user = await User.findById(userId).select("userName profilePicture");
+    const user = await User.findById(userId).select("firstName lastName userEmail profilePicture");
     res.send({ success: true, user });
   } catch (error) {
     console.error("Error fetching user:", error);
@@ -305,24 +322,31 @@ router.get("/user", isAuthenticated, async (req, res) => {
   }
 });
 
+
 // Update user password
 router.put("/user/password", isAuthenticated, async (req, res) => {
   try {
     const { currentPassword, newPassword } = req.body;
 
-    // Retrieve the user from the database using the current password
-    const user = await User.findOne({
-      _id: req.user._id,
-      password: currentPassword,
-    });
+    // Retrieve the user from the database using the user's _id from isAuthenticated middleware
+    const user = await User.findOne({ _id: req.user._id });
 
     // If user is not found, return an error
     if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    // Check if the current password is valid
+    const isPasswordValid = await bcrypt.compare(currentPassword, user.password);
+
+    // If the current password is invalid, return an error
+    if (!isPasswordValid) {
       return res.status(401).json({ message: "Invalid current password" });
     }
 
-    // Update the user's password
-    user.password = newPassword;
+    // Hash the new password and update the user's password
+    const newHashedPassword = await bcrypt.hash(newPassword, 12);
+    user.password = newHashedPassword;
     await user.save();
 
     res.json({ message: "Password updated successfully" });
@@ -331,6 +355,7 @@ router.put("/user/password", isAuthenticated, async (req, res) => {
     res.status(500).json({ message: "Internal server error" });
   }
 });
+
 
 // Add other routes here
 module.exports = {
