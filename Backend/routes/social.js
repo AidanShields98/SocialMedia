@@ -84,7 +84,7 @@ router.get("/friend_requests", isAuthenticated, async (req, res) => {
     const friendRequests = await FriendRequest.find({
       recipient: userId,
       status: "pending",
-    }).populate("requester", "firstName lastName");
+    }).populate("requester", "firstName lastName profilePicture");
 
     res.send({
       success: true,
@@ -218,7 +218,7 @@ router.get("/friends", isAuthenticated, async (req, res) => {
 
 router.post("/signin", async (req, res) => {
   const { email, password } = req.body;
-  const user = await User.findOne({ userEmail: email });
+  const user = await User.findOne({ userEmail: email.toLowerCase() }); // convert email to lowercase
 
   if (!user) {
     res.status(400).json({ success: false, message: "User not found" });
@@ -237,6 +237,7 @@ router.post("/signin", async (req, res) => {
   res.json({ success: true, message: "Logged in", userId: user.userId });
 });
 
+
 router.post("/signup", async (req, res, next) => {
   const userEmail = req.body.email.trim();
   const password = req.body.pass.trim();
@@ -245,10 +246,17 @@ router.post("/signup", async (req, res, next) => {
   const firstName = req.body.firstName;
   const lastName = req.body.lastName;
   const profilePicture = req.body.profilePicture;
- // const hashedPass = await bcrypt.hash(password, 12);
+
+  // Validate email format
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!emailRegex.test(userEmail)) {
+    res.status(400).json({ success: false, message: "Invalid email format" });
+    return;
+  }
+
   const newUser = new User({
     userEmail,
-    password,//: hashedPass,
+    password,
     userId,
     expoPushToken,
     firstName,
@@ -264,6 +272,7 @@ router.post("/signup", async (req, res, next) => {
     res.send({ success: false, message: "Error creating user" });
   }
 });
+
 
 router.post("/signout", (req, res) => {
   if (req.session) {

@@ -1,21 +1,20 @@
-import React, { useState} from "react";
+import React, { useState } from "react";
 import { View, Text, Image, TouchableOpacity, StyleSheet } from "react-native";
 import { sendFriendRequest } from "../middleware/api";
-  
-const UserItem = ({ user }) => {
-    const [requestStatus, setRequestStatus] = useState("Add");
 
-    const handleAddFriend = async () => {
-        try {
-          const response = await sendFriendRequest(user._id);
-          // Update the UI based on the response (if needed)
-          console.log("Friend request sent:", response);
-          setRequestStatus("Pending");
-        } catch (error) {
-          console.error("Error sending friend request:", error);
-        }
-      };
-    
+const UserItem = ({ user }) => {
+  const [requestStatus, setRequestStatus] = useState("Add");
+
+  const handleAddFriend = async () => {
+    try {
+      const response = await sendFriendRequest(user._id);
+      // Update the UI based on the response (if needed)
+      console.log("Friend request sent:", response);
+      setRequestStatus("Pending");
+    } catch (error) {
+      console.error("Error sending friend request:", error);
+    }
+  };
 
   return (
     <TouchableOpacity style={styles.userItem}>
@@ -25,7 +24,6 @@ const UserItem = ({ user }) => {
             uri: user?.profilePicture
               ? `data:image/jpeg;base64,${user.profilePicture}`
               : "https://via.placeholder.com/150",
-            base64: true,
           }}
           style={styles.avatar}
         />
@@ -33,7 +31,8 @@ const UserItem = ({ user }) => {
       <Text style={styles.userName}>{user.firstName + " " + user.lastName}</Text>
       <TouchableOpacity
         style={styles.addButton}
-        onPress={() => handleAddFriend(user._id)}
+        onPress={handleAddFriend}
+        disabled={requestStatus === "Pending"}
       >
         <Text style={styles.addButtonText}>{requestStatus}</Text>
       </TouchableOpacity>
@@ -58,6 +57,11 @@ const styles = StyleSheet.create({
     height: 40,
     borderRadius: 20,
     marginRight: 10,
+  },
+  avatar: {
+    width: "100%",
+    height: "100%",
+    borderRadius: 20,
   },
   userName: {
     fontSize: 16,
