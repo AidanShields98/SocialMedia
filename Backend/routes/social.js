@@ -7,7 +7,6 @@ const { sendPushNotification} = require("../middleware/notifications");
 const { User } = require("../models/User");
 const { Post } = require("../models/post");
 const { FriendRequest } = require("../models/friendRequest");
-const { Friend } = require("../models/friend");
 
 
 router.post("/createpost", isAuthenticated, async (req, res) => {
@@ -43,24 +42,7 @@ router.post("/createpost", isAuthenticated, async (req, res) => {
   }
 });
 
-// router.post("/posts", isAuthenticated, async (req, res) => {
-//   const { image, caption } = req.body;
-//   const userId = req.user._id;
 
-//   if (!image) {
-//     res.status(400).send({ success: false, message: "Image is required" });
-//     return;
-//   }
-
-//   try {
-//     const post = new Post({ user: userId, image, caption });
-//     await post.save();
-//     res.send({ success: true, message: "Post created", post });
-//   } catch (error) {
-//     console.log("Error saving post:", error);
-//     res.status(500).send({ success: false, message: "Error creating post" });
-//   }
-// });
 
 router.get("/posts", isAuthenticated, async (req, res) => {
   const userId = req.user._id;
@@ -102,7 +84,7 @@ router.get("/friend_requests", isAuthenticated, async (req, res) => {
     const friendRequests = await FriendRequest.find({
       recipient: userId,
       status: "pending",
-    }).populate("requester", "firstName lastName");
+    }).populate("requester", "firstName lastName profilePicture");
 
     res.send({
       success: true,
@@ -110,7 +92,6 @@ router.get("/friend_requests", isAuthenticated, async (req, res) => {
       friendRequests,
     });
   } catch (error) {
-    console.log("Error fetching friend requests:", error);
     res.status(500).send({
       success: false,
       message: "Error fetching friend requests",
@@ -216,7 +197,7 @@ router.get("/search", isAuthenticated, async (req, res) => {
         { firstName: { $regex: searchTerm, $options: "i" } },
         { lastName: { $regex: searchTerm, $options: "i" } },
       ],
-    }).select("firstName lastName userName profilePicture");
+    }).select("firstName lastName profilePicture");
     res.send({ success: true, users });
   } catch (error) {
     console.log("Error searching users:", error);
@@ -227,25 +208,17 @@ router.get("/search", isAuthenticated, async (req, res) => {
 router.get("/friends", isAuthenticated, async (req, res) => {
   const userId = req.user._id;
   try {
-    const friendsData = await Friend.find({
-      $or: [{ user1: userId }, { user2: userId }],
-    });
-    const friendIds = friendsData.map((f) =>
-      f.user1.toString() === userId ? f.user2 : f.user1
-    );
-    const friends = await User.find({ _id: { $in: friendIds } }).select(
-      "firstName lastName profilePicture"
-    );
-    res.send({ success: true, friends });
+    const user = await User.findById(userId).populate("friends", "firstName lastName profilePicture");
+    res.send({ success: true, friends: user.friends });
   } catch (error) {
-    console.log("Error fetching friends:", error);
     res.status(500).send({ success: false, message: "Error fetching friends" });
   }
 });
 
+
 router.post("/signin", async (req, res) => {
   const { email, password } = req.body;
-  const user = await User.findOne({ userEmail: email });
+  const user = await User.findOne({ userEmail: email.toLowerCase() }); // convert email to lowercase
 
   if (!user) {
     res.status(400).json({ success: false, message: "User not found" });
@@ -264,6 +237,7 @@ router.post("/signin", async (req, res) => {
   res.json({ success: true, message: "Logged in", userId: user.userId });
 });
 
+
 router.post("/signup", async (req, res, next) => {
   const userEmail = req.body.email.trim();
   const password = req.body.pass.trim();
@@ -272,10 +246,17 @@ router.post("/signup", async (req, res, next) => {
   const firstName = req.body.firstName;
   const lastName = req.body.lastName;
   const profilePicture = req.body.profilePicture;
- // const hashedPass = await bcrypt.hash(password, 12);
+
+  // Validate email format
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!emailRegex.test(userEmail)) {
+    res.status(400).json({ success: false, message: "Invalid email format" });
+    return;
+  }
+
   const newUser = new User({
     userEmail,
-    password,//: hashedPass,
+    password,
     userId,
     expoPushToken,
     firstName,
@@ -291,6 +272,7 @@ router.post("/signup", async (req, res, next) => {
     res.send({ success: false, message: "Error creating user" });
   }
 });
+
 
 router.post("/signout", (req, res) => {
   if (req.session) {

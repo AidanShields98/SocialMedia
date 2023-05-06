@@ -28,18 +28,6 @@ const ProfileScreen = ({ navigation, handleSignoutSuccess }) => {
   }, []);
 
   const handleChangePassword = async () => {
-    if (currentPassword === "") {
-      Alert.alert("Error", "Please enter your current password.");
-      return;
-    }
-    if (newPassword === "") {
-      Alert.alert("Error", "Please enter a new password.");
-      return;
-    }
-    if (newPassword !== confirmNewPassword) {
-      Alert.alert("Error", "New passwords do not match.");
-      return;
-    }
     try {
       await updatePassword(user._id, { currentPassword, newPassword });
       Alert.alert("Success", "Password changed successfully.");
@@ -92,13 +80,13 @@ const ProfileScreen = ({ navigation, handleSignoutSuccess }) => {
           style={styles.button}
           onPress={() => setModalVisible(true)}
         >
-          <Text>Change Password</Text>
+          <Text style={styles.buttonText}>Change Password</Text>
         </TouchableOpacity>
         <TouchableOpacity style={styles.button} onPress={handleProfilePicture}>
-          <Text>Change Profile Picture</Text>
+          <Text style={styles.buttonText}>Change Profile Picture</Text>
         </TouchableOpacity>
         <TouchableOpacity style={styles.button} onPress={handleSignOut}>
-          <Text>Sign Out</Text>
+          <Text style={styles.buttonText}>Sign Out</Text>
         </TouchableOpacity>
       </View>
 
@@ -184,6 +172,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     borderRadius: 5,
     marginBottom: 10,
+  },
+  buttonText: {
+    textAlign: "center"
   },
   modalCenteredView: {
     flex: 1,

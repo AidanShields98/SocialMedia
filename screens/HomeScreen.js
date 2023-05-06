@@ -11,6 +11,7 @@ const HomeScreen = () => {
     useCallback(() => {
       fetchPosts();
     }, [])
+  
   );
 
   const fetchPosts = async () => {
@@ -18,7 +19,7 @@ const HomeScreen = () => {
       const data = await getPosts();
       setPosts(data);
     } catch (error) {
-      console.error('Error fetching posts:', error);
+      console.log('Error fetching posts');
     }
   };
 
@@ -40,7 +41,13 @@ const HomeScreen = () => {
 
   return (
     <ScrollView contentContainerStyle={styles.scrollViewContent}>
-      {posts.map((post) => renderPost(post))}
+      {posts.length > 0 ? (
+        posts.map((post) => renderPost(post))
+      ) : (
+        <View style={styles.noPostsContainer}>
+          <Text style={styles.noPostsText}>No posts</Text>
+        </View>
+      )}
     </ScrollView>
   );
 };
@@ -65,17 +72,25 @@ const styles = StyleSheet.create({
     resizeMode: 'cover',
   },
   uploadTime: {
-    fontSize: 12, 
-    color: 'gray' 
+    fontSize: 12,
+    color: 'gray',
   },
   captionContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'left',
   },
-  caption: { 
-    fontSize: 16, 
-    textAlign: 'center' 
+  caption: {
+    fontSize: 16,
+    textAlign: 'center',
+  },
+  noPostsContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  noPostsText: {
+    fontSize: 20,
   },
 });
 

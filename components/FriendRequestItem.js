@@ -4,17 +4,19 @@ import { View, Text, TouchableOpacity, Image, StyleSheet } from "react-native";
 const FriendRequestItem = ({ request, handleAccept, handleDecline }) => {
   return (
     <View style={styles.requestItem}>
-      <Image
-        source={{
-          uri: request.requester.profilePicture
-            ? `data:image/jpeg;base64,${request.requester.profilePicture}`
-            : "https://via.placeholder.com/150",
-        }}
-        style={styles.avatar}
-      />
-      <Text style={styles.requesterName}>
-        {request.requester.firstName} {request.requester.lastName}
-      </Text>
+      <View style={styles.infoContainer}>
+        <Image
+          source={{
+            uri: request.requester.profilePicture
+              ? `data:image/jpeg;base64,${request.requester.profilePicture}`
+              : "https://via.placeholder.com/150",
+          }}
+          style={styles.avatar}
+        />
+        <Text style={styles.requesterName}>
+          {request.requester.firstName} {request.requester.lastName}
+        </Text>
+      </View>
       <View style={styles.buttonsContainer}>
         <TouchableOpacity
           style={styles.acceptButton}
@@ -45,6 +47,10 @@ const styles = StyleSheet.create({
     borderColor: "#ddd",
     borderRadius: 5,
   },
+  infoContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
   avatar: {
     width: 40,
     height: 40,
@@ -53,7 +59,6 @@ const styles = StyleSheet.create({
   },
   requesterName: {
     fontSize: 16,
-    flex: 1,
   },
   buttonsContainer: {
     flexDirection: "row",

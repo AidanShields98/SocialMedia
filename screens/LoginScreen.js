@@ -5,12 +5,14 @@ import {
   TextInput,
   TouchableOpacity,
   StyleSheet,
+  Image,
 } from "react-native";
 import { signIn } from "../middleware/api";
 
-function LoginScreen({ navigation, onLoginSuccess }) { 
+function LoginScreen({ navigation, onLoginSuccess }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [warningMessage, setWarningMessage] = useState("");
 
   const handleEmailChange = (text) => {
     setEmail(text);
@@ -27,16 +29,22 @@ function LoginScreen({ navigation, onLoginSuccess }) {
         navigation.navigate("Home");
         onLoginSuccess(response.userId);
       } else {
-        console.error(response.error);
+        console.log(response.message);
       }
     } catch (error) {
-      console.error("Error during login:", error);
+      console.log("Error during login:");
+      setWarningMessage("Incorrect password or email.");
+
     }
   };
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Login</Text>
+      <Image
+        source={require("../assets/Codak.png")}
+        style={{ width: 200, height: 100, resizeMode: "contain" }}
+      />
+
       <View style={styles.inputContainer}>
         <TextInput
           style={styles.input}
@@ -52,6 +60,9 @@ function LoginScreen({ navigation, onLoginSuccess }) {
           secureTextEntry
         />
       </View>
+      {warningMessage !== "" && (
+        <Text style={styles.warningMessage}>{warningMessage}</Text>
+      )}
       <View style={styles.buttonContainer}>
         <TouchableOpacity style={styles.button} onPress={handleLoginPress}>
           <Text style={styles.buttonText}>Log in</Text>
@@ -88,7 +99,7 @@ const styles = StyleSheet.create({
     borderColor: "#ccc",
     paddingVertical: 10,
     paddingHorizontal: 15,
-    marginBottom: 20,
+    marginBottom: 10,
   },
   input: {
     fontSize: 16,
@@ -96,6 +107,11 @@ const styles = StyleSheet.create({
     borderRadius: 5,
     borderWidth: 1,
     borderColor: "#ccc",
+    marginBottom: 10,
+  },
+  warningMessage: {
+    color: "red",
+    fontSize: 14,
     marginBottom: 10,
   },
   buttonContainer: {
